@@ -14,15 +14,16 @@ import android.view.animation.Animation
 import android.view.animation.ScaleAnimation
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.Space
 import android.widget.TextView
 
 class MainActivity : Activity() {
-    private val bg = Color.rgb(9, 13, 24)
-    private val card = Color.rgb(19, 27, 45)
-    private val cyan = Color.rgb(56, 217, 255)
-    private val purple = Color.rgb(151, 91, 255)
-    private val green = Color.rgb(63, 224, 138)
+    private val bg = Color.rgb(8, 12, 22)
+    private val card = Color.rgb(20, 28, 47)
+    private val cyan = Color.rgb(48, 211, 255)
+    private val purple = Color.rgb(142, 79, 255)
+    private val muted = Color.rgb(158, 173, 201)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,112 +35,129 @@ class MainActivity : Activity() {
             setPadding(dp(28), dp(28), dp(28), dp(28))
             setBackgroundColor(bg)
         }
-
-        val cube = TextView(this).apply {
-            text = "🟥 🟦\n🟩 🟨"
-            textSize = 38f
-            gravity = Gravity.CENTER
-        }
-        val title = label("CUBE AI", 46f, Color.WHITE, true)
-        val tagline = label("Solve • Learn • Improve", 18f, cyan, false)
+        val cube = cubeGraphic(dp(150))
+        val title = gradientTitle("CUBE AI", 46f)
+        val tagline = label("Solve • Learn • Improve", 18f, cyan, false).apply { gravity = Gravity.CENTER }
 
         root.addView(cube)
-        root.addView(space(24))
+        root.addView(space(30))
         root.addView(title)
-        root.addView(space(10))
+        root.addView(space(12))
         root.addView(tagline)
         setContentView(root)
 
-        title.startAnimation(AlphaAnimation(0.15f, 1f).apply {
-            duration = 900
+        cube.startAnimation(ScaleAnimation(.72f, 1f, .72f, 1f,
+            Animation.RELATIVE_TO_SELF, .5f, Animation.RELATIVE_TO_SELF, .5f).apply {
+            duration = 800
+        })
+        title.startAnimation(AlphaAnimation(.35f, 1f).apply {
+            duration = 850
             repeatMode = Animation.REVERSE
             repeatCount = 1
         })
-        cube.startAnimation(ScaleAnimation(
-            0.75f, 1f, 0.75f, 1f,
-            Animation.RELATIVE_TO_SELF, .5f,
-            Animation.RELATIVE_TO_SELF, .5f
-        ).apply { duration = 900 })
-
-        Handler(Looper.getMainLooper()).postDelayed({ showHome() }, 1800)
+        Handler(Looper.getMainLooper()).postDelayed({ showHome() }, 1900)
     }
 
     private fun showHome() {
-        val root = vertical(Gravity.TOP).apply {
-            setPadding(dp(20), dp(24), dp(20), dp(16))
+        val page = vertical(Gravity.TOP).apply {
+            setPadding(dp(20), dp(18), dp(20), dp(14))
             setBackgroundColor(bg)
         }
+        page.addView(gradientTitle("CUBE AI", 32f))
+        page.addView(label("Your smart Rubik's Cube coach", 14f, muted, false))
+        page.addView(space(14))
+        page.addView(cubeGraphic(dp(126)).apply {
+            layoutParams = LinearLayout.LayoutParams(-1, dp(126))
+        })
+        page.addView(space(14))
 
-        root.addView(label("CUBE AI", 32f, Color.WHITE, true))
-        root.addView(label("Your smart Rubik's Cube coach", 14f, Color.rgb(160, 174, 200), false))
-        root.addView(space(22))
-
-        val cubeHero = label("🟥 🟦 🟨\n🟩 ⬜ 🟧", 38f, Color.WHITE, false).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(12), 0, dp(12))
-        }
-        root.addView(cubeHero)
-        root.addView(space(14))
-
-        val scan = Button(this).apply {
+        page.addView(Button(this).apply {
             text = "SCAN & SOLVE"
             textSize = 20f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
-            background = roundedGradient(intArrayOf(cyan, purple), 28f)
-            setOnClickListener { showPlaceholder("Scan Your Cube", "Camera scanner is the next build step.") }
+            background = gradient(intArrayOf(cyan, purple), 28)
+            setOnClickListener { showPlaceholder("Scan Your Cube", "Camera scanner will guide you through all 6 faces.") }
+        }, LinearLayout.LayoutParams(-1, dp(62)))
+
+        page.addView(space(18))
+        val r1 = horizontal()
+        r1.addView(feature("AI", "AI Coach", "Learn smarter") { showPlaceholder("AI Coach", "Your personal cube coach.") }, weight())
+        r1.addView(space(12, true))
+        r1.addView(feature("01", "Learn", "Step by step") { showPlaceholder("Learning Path", "Beginner → Intermediate → Advanced → Speed Cuber") }, weight())
+        page.addView(r1)
+        page.addView(space(12))
+        val r2 = horizontal()
+        r2.addView(feature("⏱", "Practice", "Train & time") { showPlaceholder("Practice", "Cases, timer and custom training.") }, weight())
+        r2.addView(space(12, true))
+        r2.addView(feature("↗", "Progress", "Track growth") { showPlaceholder("My Progress", "Solves, best time, average and streak.") }, weight())
+        page.addView(r2)
+        page.addView(space(16))
+        page.addView(bottomNav())
+
+        val scroll = ScrollView(this).apply {
+            setBackgroundColor(bg)
+            isFillViewport = true
+            addView(page)
         }
-        root.addView(scan, LinearLayout.LayoutParams(-1, dp(62)))
-        root.addView(space(22))
-
-        val row1 = horizontal()
-        row1.addView(featureCard("🤖", "AI Coach", "Learn smarter") { showPlaceholder("AI Coach", "Personal coaching is coming next.") }, weight())
-        row1.addView(space(12, horizontal = true))
-        row1.addView(featureCard("📘", "Learn", "Step by step") { showPlaceholder("Learning Path", "Beginner → Speed Cuber") }, weight())
-        root.addView(row1)
-
-        root.addView(space(12))
-        val row2 = horizontal()
-        row2.addView(featureCard("⏱", "Practice", "Train & time") { showPlaceholder("Practice", "Cases, timer and custom practice") }, weight())
-        row2.addView(space(12, horizontal = true))
-        row2.addView(featureCard("📈", "Progress", "Track growth") { showPlaceholder("My Progress", "Solves, best time, streak and history") }, weight())
-        root.addView(row2)
-
-        root.addView(Space(this), LinearLayout.LayoutParams(1, 0, 1f))
-        root.addView(bottomNav())
-        setContentView(root)
+        setContentView(scroll)
     }
 
-    private fun featureCard(icon: String, title: String, sub: String, action: () -> Unit): View {
-        return vertical(Gravity.CENTER).apply {
-            setPadding(dp(12), dp(16), dp(12), dp(16))
-            background = rounded(card, 22f)
-            addView(label(icon, 26f, Color.WHITE, false))
+    private fun cubeGraphic(size: Int): View {
+        val outer = vertical(Gravity.CENTER)
+        val colors = intArrayOf(
+            Color.rgb(239,68,68), Color.rgb(59,130,246), Color.rgb(250,204,21),
+            Color.rgb(34,197,94), Color.WHITE, Color.rgb(249,115,22),
+            Color.rgb(59,130,246), Color.rgb(239,68,68), Color.rgb(34,197,94)
+        )
+        var n = 0
+        repeat(3) {
+            val row = horizontal().apply { gravity = Gravity.CENTER }
+            repeat(3) {
+                val tile = View(this).apply {
+                    background = GradientDrawable().apply {
+                        setColor(colors[n++])
+                        cornerRadius = dp(5).toFloat()
+                        setStroke(dp(2), Color.rgb(10,14,24))
+                    }
+                }
+                row.addView(tile, LinearLayout.LayoutParams(size/4, size/4).apply {
+                    setMargins(dp(2), dp(2), dp(2), dp(2))
+                })
+            }
+            outer.addView(row)
+        }
+        return outer
+    }
+
+    private fun feature(mark: String, title: String, sub: String, action: () -> Unit): View =
+        vertical(Gravity.CENTER_VERTICAL).apply {
+            setPadding(dp(18), dp(14), dp(14), dp(14))
+            background = rounded(card, 24)
+            addView(label(mark, 18f, cyan, true))
+            addView(space(7))
             addView(label(title, 17f, Color.WHITE, true))
-            addView(label(sub, 12f, Color.rgb(150, 165, 190), false))
+            addView(label(sub, 12f, muted, false))
             setOnClickListener { action() }
         }
-    }
 
-    private fun bottomNav(): View {
-        return horizontal().apply {
-            gravity = Gravity.CENTER
-            background = rounded(Color.rgb(14, 20, 34), 24f)
-            setPadding(dp(6), dp(8), dp(6), dp(8))
-            listOf("⌂\nHome", "◈\nSolve", "✦\nCoach", "▥\nProgress").forEach { item ->
-                addView(label(item, 12f, Color.WHITE, false).apply {
-                    gravity = Gravity.CENTER
-                    setPadding(dp(4), dp(4), dp(4), dp(4))
-                    setOnClickListener {
-                        when {
-                            item.contains("Home") -> showHome()
-                            item.contains("Solve") -> showPlaceholder("Scan Your Cube", "Scan all 6 faces to start solving.")
-                            item.contains("Coach") -> showPlaceholder("AI Coach", "Ask, learn and improve.")
-                            else -> showPlaceholder("My Progress", "Your solve stats will appear here.")
-                        }
+    private fun bottomNav(): View = horizontal().apply {
+        gravity = Gravity.CENTER
+        background = rounded(Color.rgb(14,20,34), 24)
+        setPadding(dp(4), dp(7), dp(4), dp(7))
+        listOf("Home","Solve","Coach","Progress").forEach { name ->
+            addView(label(name, 12f, if(name=="Home") cyan else muted, name=="Home").apply {
+                gravity = Gravity.CENTER
+                setPadding(dp(3), dp(8), dp(3), dp(8))
+                setOnClickListener {
+                    when(name) {
+                        "Home" -> showHome()
+                        "Solve" -> showPlaceholder("Scan Your Cube", "Scan all 6 faces to start.")
+                        "Coach" -> showPlaceholder("AI Coach", "Ask, learn and improve.")
+                        else -> showPlaceholder("My Progress", "Your solve stats will appear here.")
                     }
-                }, weight())
-            }
+                }
+            }, LinearLayout.LayoutParams(0, dp(46), 1f))
         }
     }
 
@@ -148,56 +166,43 @@ class MainActivity : Activity() {
             setPadding(dp(24), dp(24), dp(24), dp(24))
             setBackgroundColor(bg)
         }
-        root.addView(label(title, 30f, Color.WHITE, true))
-        root.addView(space(14))
-        root.addView(label(message, 16f, Color.rgb(170, 185, 210), false).apply { gravity = Gravity.CENTER })
+        root.addView(cubeGraphic(dp(100)))
+        root.addView(space(24))
+        root.addView(label(title, 30f, Color.WHITE, true).apply { gravity = Gravity.CENTER })
+        root.addView(space(12))
+        root.addView(label(message, 16f, muted, false).apply { gravity = Gravity.CENTER })
         root.addView(space(28))
         root.addView(Button(this).apply {
-            text = "Back to Home"
+            text = "BACK TO HOME"
             setTextColor(Color.WHITE)
-            background = rounded(cyan, 24f)
+            background = gradient(intArrayOf(cyan, purple), 24)
             setOnClickListener { showHome() }
         }, LinearLayout.LayoutParams(-1, dp(54)))
         setContentView(root)
     }
 
-    private fun vertical(gravityValue: Int) = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = gravityValue
-    }
-
-    private fun horizontal() = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-    }
-
-    private fun label(textValue: String, size: Float, color: Int, bold: Boolean) = TextView(this).apply {
-        text = textValue
+    private fun gradientTitle(value: String, size: Float) = TextView(this).apply {
+        text = value
         textSize = size
-        setTextColor(color)
-        if (bold) typeface = Typeface.DEFAULT_BOLD
+        typeface = Typeface.DEFAULT_BOLD
+        gravity = Gravity.CENTER_HORIZONTAL
+        setTextColor(Color.WHITE)
+        setShadowLayer(18f, 0f, 0f, cyan)
     }
 
-    private fun space(size: Int, horizontal: Boolean = false) =
-        Space(this).apply {
-            layoutParams = if (horizontal) LinearLayout.LayoutParams(dp(size), 1)
-            else LinearLayout.LayoutParams(1, dp(size))
-        }
-
-    private fun weight() = LinearLayout.LayoutParams(0, dp(128), 1f)
-
-    private fun rounded(color: Int, radius: Float) = GradientDrawable().apply {
-        setColor(color)
-        cornerRadius = dp(radius.toInt()).toFloat()
+    private fun vertical(g: Int) = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = g }
+    private fun horizontal() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+    private fun label(v:String,s:Float,c:Int,b:Boolean)=TextView(this).apply{
+        text=v; textSize=s; setTextColor(c); if(b) typeface=Typeface.DEFAULT_BOLD
     }
-
-    private fun roundedGradient(colors: IntArray, radius: Float) = GradientDrawable(
-        GradientDrawable.Orientation.LEFT_RIGHT, colors
-    ).apply { cornerRadius = dp(radius.toInt()).toFloat() }
-
-    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+    private fun space(v:Int,horizontal:Boolean=false)=Space(this).apply{
+        layoutParams=if(horizontal) LinearLayout.LayoutParams(dp(v),1) else LinearLayout.LayoutParams(1,dp(v))
+    }
+    private fun weight()=LinearLayout.LayoutParams(0,dp(116),1f)
+    private fun rounded(c:Int,r:Int)=GradientDrawable().apply{setColor(c);cornerRadius=dp(r).toFloat()}
+    private fun gradient(c:IntArray,r:Int)=GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,c).apply{cornerRadius=dp(r).toFloat()}
+    private fun dp(v:Int)=(v*resources.displayMetrics.density).toInt()
 
     @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        showHome()
-    }
+    override fun onBackPressed() { showHome() }
 }
