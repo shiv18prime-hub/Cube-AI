@@ -1,10 +1,12 @@
 name: Build Cube AI APK
+
 on:
   push:
-    branches: [ main, cube-ai-foundation ]
+    branches: [ main, cube-ai-foundation, cube-ai-locked-ui ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
