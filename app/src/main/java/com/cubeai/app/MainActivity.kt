@@ -46,9 +46,14 @@ class MainActivity : Activity() {
         root.addView(tagline)
         setContentView(root)
 
-        cube.startAnimation(ScaleAnimation(.72f, 1f, .72f, 1f,
-            Animation.RELATIVE_TO_SELF, .5f, Animation.RELATIVE_TO_SELF, .5f).apply {
-            duration = 800
+        cube.startAnimation(android.view.animation.RotateAnimation(
+            0f, 360f,
+            Animation.RELATIVE_TO_SELF, .5f,
+            Animation.RELATIVE_TO_SELF, .5f
+        ).apply {
+            duration = 4200
+            repeatCount = Animation.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
         })
         title.startAnimation(AlphaAnimation(.35f, 1f).apply {
             duration = 850
@@ -68,6 +73,15 @@ class MainActivity : Activity() {
         page.addView(space(14))
         page.addView(cubeGraphic(dp(126)).apply {
             layoutParams = LinearLayout.LayoutParams(-1, dp(126))
+            startAnimation(android.view.animation.RotateAnimation(
+                0f, 360f,
+                Animation.RELATIVE_TO_SELF, .5f,
+                Animation.RELATIVE_TO_SELF, .5f
+            ).apply {
+                duration = 5200
+                repeatCount = Animation.INFINITE
+                interpolator = android.view.animation.LinearInterpolator()
+            })
         })
         page.addView(space(14))
 
