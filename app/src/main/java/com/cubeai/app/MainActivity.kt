@@ -35,7 +35,7 @@ class MainActivity : Activity() {
             setPadding(dp(28), dp(28), dp(28), dp(28))
             setBackgroundColor(bg)
         }
-        val cube = cubeGraphic(dp(150))
+        val cube = Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(220)) }
         val title = gradientTitle("CUBE AI", 46f)
         val tagline = label("Solve • Learn • Improve", 18f, cyan, false).apply { gravity = Gravity.CENTER }
 
@@ -46,15 +46,6 @@ class MainActivity : Activity() {
         root.addView(tagline)
         setContentView(root)
 
-        cube.startAnimation(android.view.animation.RotateAnimation(
-            0f, 360f,
-            Animation.RELATIVE_TO_SELF, .5f,
-            Animation.RELATIVE_TO_SELF, .5f
-        ).apply {
-            duration = 4200
-            repeatCount = Animation.INFINITE
-            interpolator = android.view.animation.LinearInterpolator()
-        })
         title.startAnimation(AlphaAnimation(.35f, 1f).apply {
             duration = 850
             repeatMode = Animation.REVERSE
@@ -71,18 +62,7 @@ class MainActivity : Activity() {
         page.addView(gradientTitle("CUBE AI", 32f))
         page.addView(label("Your smart Rubik's Cube coach", 14f, muted, false))
         page.addView(space(14))
-        page.addView(cubeGraphic(dp(126)).apply {
-            layoutParams = LinearLayout.LayoutParams(-1, dp(126))
-            startAnimation(android.view.animation.RotateAnimation(
-                0f, 360f,
-                Animation.RELATIVE_TO_SELF, .5f,
-                Animation.RELATIVE_TO_SELF, .5f
-            ).apply {
-                duration = 5200
-                repeatCount = Animation.INFINITE
-                interpolator = android.view.animation.LinearInterpolator()
-            })
-        })
+        page.addView(Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(190)) })
         page.addView(space(14))
 
         page.addView(Button(this).apply {
@@ -180,7 +160,7 @@ class MainActivity : Activity() {
             setPadding(dp(24), dp(24), dp(24), dp(24))
             setBackgroundColor(bg)
         }
-        root.addView(cubeGraphic(dp(100)))
+        root.addView(Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(160)) })
         root.addView(space(24))
         root.addView(label(title, 30f, Color.WHITE, true).apply { gravity = Gravity.CENTER })
         root.addView(space(12))
