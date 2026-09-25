@@ -54,11 +54,11 @@ class Cube3DView(context: Context) : View(context) {
         paint.setShadowLayer(26f,0f,12f,Color.argb(110,30,170,255))
 
         val faces=listOf(
-            Face(listOf(P3(-1,-1,1),P3(1,-1,1),P3(1,1,1),P3(-1,1,1)),
+            Face(listOf(P3(-1.0,-1.0,1.0),P3(1.0,-1.0,1.0),P3(1.0,1.0,1.0),P3(-1.0,1.0,1.0)),
                 intArrayOf(0xFFF44336.toInt(),0xFF1976F3.toInt(),0xFFFFC107.toInt(),0xFF22C55E.toInt(),0xFFFFFFFF.toInt(),0xFFFF6D00.toInt(),0xFF1976F3.toInt(),0xFFF44336.toInt(),0xFF22C55E.toInt()),P3(0.0,0.0,1.0)),
-            Face(listOf(P3(1,-1,1),P3(1,-1,-1),P3(1,1,-1),P3(1,1,1)),
+            Face(listOf(P3(1.0,-1.0,1.0),P3(1.0,-1.0,-1.0),P3(1.0,1.0,-1.0),P3(1.0,1.0,1.0)),
                 intArrayOf(0xFFFF6D00.toInt(),0xFF22C55E.toInt(),0xFFF44336.toInt(),0xFF1976F3.toInt(),0xFFFFC107.toInt(),0xFFFFFFFF.toInt(),0xFF22C55E.toInt(),0xFFFF6D00.toInt(),0xFF1976F3.toInt()),P3(1.0,0.0,0.0)),
-            Face(listOf(P3(-1,-1,-1),P3(1,-1,-1),P3(1,-1,1),P3(-1,-1,1)),
+            Face(listOf(P3(-1.0,-1.0,-1.0),P3(1.0,-1.0,-1.0),P3(1.0,-1.0,1.0),P3(-1.0,-1.0,1.0)),
                 intArrayOf(0xFFFFFFFF.toInt(),0xFFFFC107.toInt(),0xFF1976F3.toInt(),0xFFF44336.toInt(),0xFF22C55E.toInt(),0xFFFF6D00.toInt(),0xFFFFC107.toInt(),0xFF1976F3.toInt(),0xFFFFFFFF.toInt()),P3(0.0,-1.0,0.0))
         )
         val visible=faces.map { f -> f to rot(f.normal) }.filter { it.second.z>0.02 }.sortedBy { it.second.z }
