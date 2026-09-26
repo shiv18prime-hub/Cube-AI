@@ -18,18 +18,22 @@ class Cube3DView(context: Context) : View(context) {
         strokeWidth = 5f
         strokeJoin = Paint.Join.ROUND
     }
-    private var yaw = 28.0
-    private var pitch = -24.0
+    private val yaw = 32.0
+    private val pitch = -24.0
+    private var moveAngle = 0.0
+    private var moveIndex = 0
+    private val moves = arrayOf("R", "U", "R'", "U'")
 
-    private val anim = ValueAnimator.ofFloat(0f, 360f).apply {
-        duration = 10500
+    private val anim = ValueAnimator.ofFloat(0f, 1f).apply {
+        duration = 900
         repeatCount = ValueAnimator.INFINITE
-        interpolator = LinearInterpolator()
+        repeatMode = ValueAnimator.RESTART
+        interpolator = android.view.animation.AccelerateDecelerateInterpolator()
         addUpdateListener {
-            val t = (it.animatedValue as Float).toDouble()
-            yaw = t
-            pitch = -22.0 + 13.0 * sin(Math.toRadians(t * 1.25))
+            val p = (it.animatedValue as Float).toDouble()
+            moveAngle = 90.0 * p * if (moves[moveIndex].endsWith("'")) -1.0 else 1.0
             invalidate()
+            if (p > 0.995) moveIndex = (moveIndex + 1) % moves.size
         }
     }
 
@@ -45,6 +49,16 @@ class Cube3DView(context: Context) : View(context) {
         val x1 = v.x * cy + v.z * sy
         val z1 = -v.x * sy + v.z * cy
         return V(x1, v.y * cx - z1 * sx, v.y * sx + z1 * cx)
+    }
+
+    private fun layerRotate(v: V, move: String): V {
+        val a = Math.toRadians(moveAngle)
+        val ca = cos(a); val sa = sin(a)
+        return when {
+            move.startsWith("R") && v.x > 0.32 -> V(v.x, v.y*ca-v.z*sa, v.y*sa+v.z*ca)
+            move.startsWith("U") && v.y < -0.32 -> V(v.x*ca+v.z*sa, v.y, -v.x*sa+v.z*ca)
+            else -> v
+        }
     }
 
     private fun project(v: V, cx: Float, cy: Float, scale: Float): PointF {
@@ -95,8 +109,11 @@ class Cube3DView(context: Context) : View(context) {
         val scale = min(width, height) * 0.34f
 
         val visible = stickers().map { s ->
-            val rn = rotate(s.normal)
-            val rp = s.p.map(::rotate)
+            val move = moves[moveIndex]
+            val center = V(s.p.map { it.x }.average(), s.p.map { it.y }.average(), s.p.map { it.z }.average())
+            val active = (move.startsWith("R") && center.x > 0.32) || (move.startsWith("U") && center.y < -0.32)
+            val rn = rotate(if (active) layerRotate(s.normal, move) else s.normal)
+            val rp = s.p.map { rotate(if (active) layerRotate(it, move) else it) }
             Triple(s, rn, rp)
         }.filter { it.second.z > 0.01 }
          .sortedBy { it.third.map { p -> p.z }.average() }
