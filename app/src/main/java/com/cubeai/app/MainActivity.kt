@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.FrameLayout
+import android.widget.GridLayout
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.core.ImageAnalysis
@@ -250,31 +251,47 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showScanReview() {
+        fun stickerColor(ch:Char)=when(ch){'W'->Color.WHITE;'Y'->Color.YELLOW;'R'->Color.rgb(220,35,45);'O'->Color.rgb(255,120,20);'G'->Color.rgb(25,175,80);else->Color.rgb(40,105,230)}
+        val root=vertical(Gravity.CENTER).apply{setPadding(dp(16),dp(20),dp(16),dp(20));setBackgroundColor(bg)}
+        root.addView(label("VERIFY YOUR CUBE",26f,Color.WHITE,true).apply{gravity=Gravity.CENTER})
+        root.addView(label("Tap any sticker to correct its color",14f,muted,false).apply{gravity=Gravity.CENTER})
+        val names=arrayOf("FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM")
+        scannedFaces.forEachIndexed{fi,face->
+            root.addView(label(names[fi],13f,Color.WHITE,true).apply{gravity=Gravity.CENTER})
+            val grid=GridLayout(this).apply{columnCount=3;rowCount=3}
+            face.forEachIndexed{si,s->
+                val cell=Button(this).apply{
+                    text="";background=rounded(stickerColor(s.label),8)
+                    setOnClickListener{
+                        val seq=charArrayOf('W','Y','R','O','G','B')
+                        val next=seq[(seq.indexOf(scannedFaces[fi][si].label)+1)%seq.size]
+                        val mutable=scannedFaces[fi].toMutableList()
+                        mutable[si]=CubeColorDetector.Sample(next,stickerColor(next))
+                        scannedFaces[fi]=mutable
+                        showScanReview()
+                    }
+                }
+                grid.addView(cell,GridLayout.LayoutParams().apply{width=dp(42);height=dp(42);setMargins(dp(2),dp(2),dp(2),dp(2))})
+            }
+            root.addView(grid,LinearLayout.LayoutParams(-2,-2).apply{gravity=Gravity.CENTER})
+        }
         val mapped=ScanStateMapper.map(scannedFaces)
-        val state=scannedFaces.joinToString(" | "){face->face.joinToString(""){it.label.toString()}}
-        val root=vertical(Gravity.CENTER).apply{setPadding(dp(20),dp(28),dp(20),dp(28));setBackgroundColor(bg)}
-        root.addView(label("VERIFY YOUR CUBE",26f,Color.WHITE,true))
-        root.addView(label("FRONT • RIGHT • BACK • LEFT • TOP • BOTTOM\n$state",14f,muted,false))
-        root.addView(label(mapped.message,16f,if(mapped.facelets!=null) Color.rgb(80,220,120) else Color.rgb(255,100,100),true))
+        root.addView(label(mapped.message,15f,if(mapped.facelets!=null) Color.rgb(80,220,120) else Color.rgb(255,100,100),true).apply{gravity=Gravity.CENTER})
         val solve=Button(this).apply{
-            text=if(mapped.facelets!=null) "CONTINUE TO SOLVER" else "RESCAN CUBE"
+            text=if(mapped.facelets!=null) "SOLVE THIS CUBE" else "FIX COLORS / RESCAN"
+            isEnabled=mapped.facelets!=null
             setTextColor(Color.WHITE);background=gradient(intArrayOf(cyan,purple),28)
             setOnClickListener{
-                if(mapped.facelets==null) startScanner()
-                else {
-                    val cube=CubeEngine()
-                    if(cube.load(mapped.facelets)) {
-                        val result=CubeSolver().solveFacelets(mapped.facelets)
-                        if(result.valid) showSolutionSteps(mapped.facelets,result.moves)
-                        else showPlaceholder("Scan Needs Correction",result.message)
-                    } else startScanner()
+                mapped.facelets?.let{facelets->
+                    val result=CubeSolver().solveFacelets(facelets)
+                    if(result.valid) showSolutionSteps(facelets,result.moves)
+                    else showPlaceholder("Scan Needs Correction",result.message)
                 }
             }
         }
-        root.addView(solve,LinearLayout.LayoutParams(-1,dp(60)).apply{topMargin=dp(24)})
-        val rescan=Button(this).apply{text="RESCAN ALL FACES";setOnClickListener{startScanner()}}
-        root.addView(rescan,LinearLayout.LayoutParams(-1,dp(54)).apply{topMargin=dp(12)})
-        setContentView(root)
+        root.addView(solve,LinearLayout.LayoutParams(-1,dp(58)).apply{topMargin=dp(16)})
+        root.addView(Button(this).apply{text="RESCAN ALL FACES";setOnClickListener{startScanner()}},LinearLayout.LayoutParams(-1,dp(50)).apply{topMargin=dp(8)})
+        setContentView(ScrollView(this).apply{addView(root)})
     }
 
     private fun showPlaceholder(title: String, message: String) {
