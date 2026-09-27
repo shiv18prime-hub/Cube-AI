@@ -35,7 +35,7 @@ class MainActivity : Activity() {
             setPadding(dp(28), dp(28), dp(28), dp(28))
             setBackgroundColor(bg)
         }
-        val cube = Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(220)) }
+        val cube = Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(200)) }
         val title = gradientTitle("CUBE AI", 46f)
         val tagline = label("Solve • Learn • Improve", 18f, cyan, false).apply { gravity = Gravity.CENTER }
 
@@ -62,7 +62,7 @@ class MainActivity : Activity() {
         page.addView(gradientTitle("CUBE AI", 32f))
         page.addView(label("Your smart Rubik's Cube coach", 14f, muted, false))
         page.addView(space(14))
-        page.addView(Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(190)) })
+        page.addView(Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(176)) })
         page.addView(space(14))
 
         page.addView(Button(this).apply {
@@ -160,7 +160,7 @@ class MainActivity : Activity() {
             setPadding(dp(24), dp(24), dp(24), dp(24))
             setBackgroundColor(bg)
         }
-        root.addView(Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(160)) })
+        root.addView(Cube3DView(this).apply { layoutParams = LinearLayout.LayoutParams(-1, dp(150)) })
         root.addView(space(24))
         root.addView(label(title, 30f, Color.WHITE, true).apply { gravity = Gravity.CENTER })
         root.addView(space(12))
