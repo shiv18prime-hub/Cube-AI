@@ -14,7 +14,7 @@ class Cube3DView(context: Context) : View(context) {
     data class Sticker(var p:List<V>,val color:Int,var normal:V)
 
     private val fill=Paint(Paint.ANTI_ALIAS_FLAG)
-    private val border=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.STROKE;color=Color.rgb(8,9,12);strokeWidth=5f;strokeJoin=Paint.Join.ROUND}
+    private val border=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.STROKE;color=Color.rgb(8,9,12);strokeWidth=3.2f;strokeJoin=Paint.Join.ROUND}
     private val yaw=32.0; private val pitch=-24.0
     private val sequence=arrayOf("R","U","R'","U'","F","L","F'","L'")
     private var moveIndex=0; private var angle=0.0
@@ -86,7 +86,13 @@ class Cube3DView(context: Context) : View(context) {
     }
 
     override fun onDraw(canvas:Canvas){
-        super.onDraw(canvas);val cx=width/2f;val cy=height/2f;val scale=min(width,height)*.34f
+        super.onDraw(canvas);val cx=width/2f;val cy=height/2f;val scale=min(width,height)*.285f
+        val core=Paint(Paint.ANTI_ALIAS_FLAG).apply{
+            color=Color.rgb(10,13,18);style=Paint.Style.FILL
+            setShadowLayer(22f,0f,10f,Color.argb(95,30,170,255))
+        }
+        val coreSize=scale*2.05f
+        canvas.drawRoundRect(cx-coreSize/2,cy-coreSize/2,cx+coreSize/2,cy+coreSize/2,18f,18f,core)
         val m=sequence[moveIndex]
         val visible=state.map{s->
             val act=active(center(s),m)
@@ -97,10 +103,10 @@ class Cube3DView(context: Context) : View(context) {
         for((st,n,ps)in visible){
             val q=ps.map{project(it,cx,cy,scale)}
             val path=Path().apply{moveTo(q[0].x,q[0].y);for(i in 1..3)lineTo(q[i].x,q[i].y);close()}
-            val light=(.70+.30*max(0.0,n.z)).toFloat();val base=st.color
+            val light=(.76+.24*max(0.0,n.z)).toFloat();val base=st.color
             fill.style=Paint.Style.FILL;fill.color=Color.rgb((Color.red(base)*light).toInt().coerceIn(0,255),(Color.green(base)*light).toInt().coerceIn(0,255),(Color.blue(base)*light).toInt().coerceIn(0,255))
-            fill.setShadowLayer(14f,0f,6f,Color.argb(65,40,170,255));canvas.drawPath(path,fill);fill.clearShadowLayer();canvas.drawPath(path,border)
-            fill.style=Paint.Style.STROKE;fill.strokeWidth=1.5f;fill.color=Color.argb(85,255,255,255);canvas.drawPath(path,fill)
+            fill.setShadowLayer(8f,0f,3f,Color.argb(45,40,170,255));canvas.drawPath(path,fill);fill.clearShadowLayer();canvas.drawPath(path,border)
+            fill.style=Paint.Style.STROKE;fill.strokeWidth=1.2f;fill.color=Color.argb(115,255,255,255);canvas.drawPath(path,fill)
         }
     }
 }
