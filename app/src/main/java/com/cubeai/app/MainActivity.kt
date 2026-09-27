@@ -1,6 +1,15 @@
 package com.cubeai.app
 
 import android.app.Activity
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.FrameLayout
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -71,7 +80,7 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
             background = gradient(intArrayOf(cyan, purple), 28)
-            setOnClickListener { showPlaceholder("Scan Your Cube", "Camera scanner will guide you through all 6 faces.") }
+            setOnClickListener { startScanner() }
         }, LinearLayout.LayoutParams(-1, dp(62)))
 
         page.addView(space(18))
@@ -146,13 +155,63 @@ class MainActivity : Activity() {
                 setOnClickListener {
                     when(name) {
                         "Home" -> showHome()
-                        "Solve" -> showPlaceholder("Scan Your Cube", "Scan all 6 faces to start.")
+                        "Solve" -> startScanner()
                         "Coach" -> showPlaceholder("AI Coach", "Ask, learn and improve.")
                         else -> showPlaceholder("My Progress", "Your solve stats will appear here.")
                     }
                 }
             }, LinearLayout.LayoutParams(0, dp(46), 1f))
         }
+    }
+
+
+    private var scanFace = 0
+    private val faceNames = arrayOf("FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM")
+
+    private fun startScanner() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 41)
+            return
+        }
+        showScanner()
+    }
+
+    override fun onRequestPermissionsResult(requestCode:Int, permissions:Array<out String>, grantResults:IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(requestCode==41 && grantResults.firstOrNull()==PackageManager.PERMISSION_GRANTED) showScanner()
+    }
+
+    private fun showScanner() {
+        scanFace=0
+        val root=FrameLayout(this).apply{setBackgroundColor(Color.BLACK)}
+        val preview=PreviewView(this)
+        root.addView(preview, FrameLayout.LayoutParams(-1,-1))
+        root.addView(CubeScannerView(this), FrameLayout.LayoutParams(-1,-1))
+        val info=label("Face 1 of 6 • FRONT\nAlign all 9 stickers inside the grid",18f,Color.WHITE,true).apply{
+            gravity=Gravity.CENTER; setPadding(dp(12),dp(10),dp(12),dp(10)); background=rounded(Color.argb(185,8,12,22),20)
+        }
+        root.addView(info,FrameLayout.LayoutParams(-1,dp(78),Gravity.TOP).apply{setMargins(dp(18),dp(24),dp(18),0)})
+        val capture=Button(this).apply{
+            text="CAPTURE FACE";textSize=18f;setTextColor(Color.WHITE);background=gradient(intArrayOf(cyan,purple),28)
+            setOnClickListener{
+                scanFace++
+                if(scanFace>=6) showScanReview()
+                else { info.text="Face ${scanFace+1} of 6 • ${faceNames[scanFace]}\nAlign all 9 stickers inside the grid" }
+            }
+        }
+        root.addView(capture,FrameLayout.LayoutParams(-1,dp(62),Gravity.BOTTOM).apply{setMargins(dp(24),0,dp(24),dp(28))})
+        setContentView(root)
+
+        val providerFuture=ProcessCameraProvider.getInstance(this)
+        providerFuture.addListener({
+            val provider=providerFuture.get()
+            val p=Preview.Builder().build().also{it.setSurfaceProvider(preview.surfaceProvider)}
+            try{provider.unbindAll();provider.bindToLifecycle(this,CameraSelector.DEFAULT_BACK_CAMERA,p)}catch(_:Exception){}
+        },ContextCompat.getMainExecutor(this))
+    }
+
+    private fun showScanReview() {
+        showPlaceholder("6 Faces Captured", "Camera flow is working. Next: detect the 9 sticker colors and validate the cube state.")
     }
 
     private fun showPlaceholder(title: String, message: String) {
