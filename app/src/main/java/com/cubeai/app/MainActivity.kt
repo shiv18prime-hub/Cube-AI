@@ -222,6 +222,33 @@ class MainActivity : AppCompatActivity() {
         },ContextCompat.getMainExecutor(this))
     }
 
+    private fun showSolutionSteps(facelets:String,moves:List<String>) {
+        var step=0
+        fun render() {
+            val root=vertical(Gravity.CENTER).apply{setPadding(dp(24),dp(28),dp(24),dp(28));setBackgroundColor(bg)}
+            root.addView(label("SOLVING YOUR CUBE",25f,Color.WHITE,true))
+            val title=if(moves.isEmpty()) "Cube already solved" else "Step ${step+1} of ${moves.size}"
+            root.addView(label(title,18f,cyan,true))
+            if(moves.isNotEmpty()) {
+                root.addView(label(moves[step],46f,Color.WHITE,true))
+                root.addView(label("Perform this move, then tap NEXT.",16f,muted,false))
+                val next=Button(this).apply{
+                    text=if(step==moves.lastIndex) "FINISH" else "NEXT"
+                    setTextColor(Color.WHITE);background=gradient(intArrayOf(cyan,purple),28)
+                    setOnClickListener{
+                        if(step<moves.lastIndex){step++;render()}
+                        else showPlaceholder("CUBE SOLVED","Solution completed in ${moves.size} moves.")
+                    }
+                }
+                root.addView(next,LinearLayout.LayoutParams(-1,dp(60)).apply{topMargin=dp(24)})
+            }
+            val rescan=Button(this).apply{text="I MADE A MISTAKE • RESCAN";setOnClickListener{startScanner()}}
+            root.addView(rescan,LinearLayout.LayoutParams(-1,dp(54)).apply{topMargin=dp(12)})
+            setContentView(root)
+        }
+        render()
+    }
+
     private fun showScanReview() {
         val mapped=ScanStateMapper.map(scannedFaces)
         val state=scannedFaces.joinToString(" | "){face->face.joinToString(""){it.label.toString()}}
@@ -236,8 +263,11 @@ class MainActivity : AppCompatActivity() {
                 if(mapped.facelets==null) startScanner()
                 else {
                     val cube=CubeEngine()
-                    if(cube.load(mapped.facelets)) showPlaceholder("Cube State Ready","54 stickers validated and passed to the solver pipeline. Arbitrary scanned-state solving is the next solver-engine step.")
-                    else startScanner()
+                    if(cube.load(mapped.facelets)) {
+                        val result=CubeSolver().solveFacelets(mapped.facelets)
+                        if(result.valid) showSolutionSteps(mapped.facelets,result.moves)
+                        else showPlaceholder("Scan Needs Correction",result.message)
+                    } else startScanner()
                 }
             }
         }
