@@ -1,6 +1,6 @@
 package com.cubeai.app
 
-import android.app.Activity
+import androidx.appcompat.app.AppCompatActivity
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.FrameLayout
@@ -27,7 +27,7 @@ import android.widget.ScrollView
 import android.widget.Space
 import android.widget.TextView
 
-class MainActivity : Activity() {
+class MainActivity : AppCompatActivity() {
     private val bg = Color.rgb(8, 12, 22)
     private val card = Color.rgb(20, 28, 47)
     private val cyan = Color.rgb(48, 211, 255)
