@@ -223,8 +223,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showScanReview() {
+        val mapped=ScanStateMapper.map(scannedFaces)
         val state=scannedFaces.joinToString(" | "){face->face.joinToString(""){it.label.toString()}}
-        showPlaceholder("6 Faces Detected", "Detected colors:\n$state\n\nNext: correction + cube-state validation before solving.")
+        val root=vertical(Gravity.CENTER).apply{setPadding(dp(20),dp(28),dp(20),dp(28));setBackgroundColor(bg)}
+        root.addView(label("VERIFY YOUR CUBE",26f,Color.WHITE,true))
+        root.addView(label("FRONT • RIGHT • BACK • LEFT • TOP • BOTTOM\n$state",14f,muted,false))
+        root.addView(label(mapped.message,16f,if(mapped.facelets!=null) Color.rgb(80,220,120) else Color.rgb(255,100,100),true))
+        val solve=Button(this).apply{
+            text=if(mapped.facelets!=null) "CONTINUE TO SOLVER" else "RESCAN CUBE"
+            setTextColor(Color.WHITE);background=gradient(intArrayOf(cyan,purple),28)
+            setOnClickListener{
+                if(mapped.facelets==null) startScanner()
+                else {
+                    val cube=CubeEngine()
+                    if(cube.load(mapped.facelets)) showPlaceholder("Cube State Ready","54 stickers validated and passed to the solver pipeline. Arbitrary scanned-state solving is the next solver-engine step.")
+                    else startScanner()
+                }
+            }
+        }
+        root.addView(solve,LinearLayout.LayoutParams(-1,dp(60)).apply{topMargin=dp(24)})
+        val rescan=Button(this).apply{text="RESCAN ALL FACES";setOnClickListener{startScanner()}}
+        root.addView(rescan,LinearLayout.LayoutParams(-1,dp(54)).apply{topMargin=dp(12)})
+        setContentView(root)
     }
 
     private fun showPlaceholder(title: String, message: String) {
