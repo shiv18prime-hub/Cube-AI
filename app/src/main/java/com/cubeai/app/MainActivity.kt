@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.widget.FrameLayout
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
+import androidx.camera.core.ImageAnalysis
+import java.util.concurrent.Executors
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
@@ -166,6 +168,8 @@ class MainActivity : AppCompatActivity() {
 
 
     private var scanFace = 0
+    private val scannedFaces=mutableListOf<List<CubeColorDetector.Sample>>()
+    @Volatile private var latestSamples:List<CubeColorDetector.Sample> = emptyList()
     private val faceNames = arrayOf("FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM")
 
     private fun startScanner() {
@@ -183,6 +187,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showScanner() {
         scanFace=0
+        scannedFaces.clear()
         val root=FrameLayout(this).apply{setBackgroundColor(Color.BLACK)}
         val preview=PreviewView(this)
         root.addView(preview, FrameLayout.LayoutParams(-1,-1))
@@ -194,6 +199,8 @@ class MainActivity : AppCompatActivity() {
         val capture=Button(this).apply{
             text="CAPTURE FACE";textSize=18f;setTextColor(Color.WHITE);background=gradient(intArrayOf(cyan,purple),28)
             setOnClickListener{
+                if(latestSamples.size!=9) return@setOnClickListener
+                scannedFaces+=latestSamples.toList()
                 scanFace++
                 if(scanFace>=6) showScanReview()
                 else { info.text="Face ${scanFace+1} of 6 • ${faceNames[scanFace]}\nAlign all 9 stickers inside the grid" }
@@ -206,12 +213,18 @@ class MainActivity : AppCompatActivity() {
         providerFuture.addListener({
             val provider=providerFuture.get()
             val p=Preview.Builder().build().also{it.setSurfaceProvider(preview.surfaceProvider)}
-            try{provider.unbindAll();provider.bindToLifecycle(this,CameraSelector.DEFAULT_BACK_CAMERA,p)}catch(_:Exception){}
+            val analysis=ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
+            val executor=Executors.newSingleThreadExecutor()
+            analysis.setAnalyzer(executor){ image->
+                try { latestSamples=CubeColorDetector.detect(image) } finally { image.close() }
+            }
+            try{provider.unbindAll();provider.bindToLifecycle(this,CameraSelector.DEFAULT_BACK_CAMERA,p,analysis)}catch(_:Exception){}
         },ContextCompat.getMainExecutor(this))
     }
 
     private fun showScanReview() {
-        showPlaceholder("6 Faces Captured", "Camera flow is working. Next: detect the 9 sticker colors and validate the cube state.")
+        val state=scannedFaces.joinToString(" | "){face->face.joinToString(""){it.label.toString()}}
+        showPlaceholder("6 Faces Detected", "Detected colors:\n$state\n\nNext: correction + cube-state validation before solving.")
     }
 
     private fun showPlaceholder(title: String, message: String) {
